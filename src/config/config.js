@@ -41,6 +41,7 @@ module.exports = {
       // modern connection options
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      ServerSelectionTimeoutMS: 3000,
     },
   },
   jwt: {
