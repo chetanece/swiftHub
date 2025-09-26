@@ -1,7 +1,5 @@
 const express = require('express');
 const helmet = require('helmet');
-const xss = require('xss-clean');
-const mongoSanitize = require('express-mongo-sanitize');
 const compression = require('compression');
 const cors = require('cors');
 const passport = require('passport');
@@ -26,8 +24,6 @@ if (config.env !== 'test') {
 app.use(helmet());
 app.use(express.json({ limit: '50mb' })); // or higher if needed
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(xss());
-app.use(mongoSanitize());
 app.use(compression());
 app.use(cors());
 

@@ -24,7 +24,7 @@ const login = {
 
 const logout = {
   body: Joi.object().keys({
-    refreshToken: Joi.string().required(),
+  refreshToken: Joi.string().required(),
   }),
 };
 
@@ -52,14 +52,6 @@ const changePassword = {
   }),
 };
 
-const isVerified = {
-  query: Joi.object().keys({
-    userId: Joi.string().custom(objectId).required(),
-  }),
-  body: Joi.object().keys({
-    isProfileVerified: Joi.boolean().required(),
-  }),
-};
 
 module.exports = {
   register,
@@ -68,5 +60,4 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
-  isVerified,
 };

@@ -35,7 +35,7 @@ const register = async (userBody) => {
 const login = async (userBody) => {
   const { email, password, fcmToken } = userBody;
   let user = await admin.findOne({ email });
-  if (!UserRecord) {
+  if (!user) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid credentials');
   }
   if (!password) {
@@ -82,23 +82,17 @@ const login = async (userBody) => {
 // };
 
 const logout = async (req) => {
-  const { refreshToken, email } = req.body;
-  const user = await admin.findOne({ email: req.body.email });
-  console.log('isoifnodsf', user);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  const userId = user._id;
-  console.log('husdf', userId);
+  const { refreshToken } = req.body;
   const refreshTokenDoc = await Token.findOne({
     token: refreshToken,
     type: tokenTypes.REFRESH,
-    blacklisted: false,
   });
   if (!refreshTokenDoc) {
     throw new ApiError(httpStatus.NOT_FOUND, responseMessage.NOT_FOUND);
   }
-  await refreshTokenDoc.remove();
+  // Find the user by the ID stored in the refresh token
+  const userId = refreshTokenDoc.user;
+  await Token.deleteOne({ _id: refreshTokenDoc._id });
   await admin.findOneAndUpdate({ _id: userId }, { $set: { fcmToken: null } });
   return {
     message: 'User logged out successfully',
@@ -233,32 +227,32 @@ const updateUserById = async (userId, role, password) => {
 
 //   return verified;
 // };
-const isIdVerified = async (req) => {
-  const { userId } = req.query;
+// const isIdVerified = async (req) => {
+//   const { userId } = req.query;
 
-  if (!userId) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'UserId is required');
-  }
+//   if (!userId) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, 'UserId is required');
+//   }
 
-  const user = await User.findById(userId);
+//   const user = await User.findById(userId);
 
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  }
+//   if (!user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+//   }
 
-  // Optional check if the same value is already set
-  if (user.isProfileVerified === req.body.isProfileVerified) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User is already Verified');
-  }
+//   // Optional check if the same value is already set
+//   if (user.isProfileVerified === req.body.isProfileVerified) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, 'User is already Verified');
+//   }
 
-  const verified = await User.findByIdAndUpdate(
-    userId, // <-- ID
-    { isProfileVerified: req.body.isProfileVerified }, // <-- update
-    { new: true } // <-- options
-  );
+//   const verified = await User.findByIdAndUpdate(
+//     userId, // <-- ID
+//     { isProfileVerified: req.body.isProfileVerified }, // <-- update
+//     { new: true } // <-- options
+//   );
 
-  return verified;
-};
+//   return verified;
+// };
 
 
 module.exports = {
@@ -271,5 +265,5 @@ module.exports = {
   changePassword,
   // getUserByPhoneNumber,
   // getUsersById,
-  isIdVerified,
+
 };

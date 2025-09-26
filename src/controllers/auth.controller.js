@@ -13,7 +13,7 @@ const register = catchAsync(async (req, res) => {
   const { roleType } = req.body;
   const user = await authService.register(req.body);
   const token = await tokenService.generateAuthTokens(user, req.body.roleType);
-  res.status(httpStatus.CREATED).send({ success: true, user, token });
+  res.status(201).send({ success: true, user, token });
 });
 
 const login = catchAsync(async (req, res) => {
@@ -21,12 +21,12 @@ const login = catchAsync(async (req, res) => {
   console.log('User returned from login:', user);
   const tokens = await tokenService.generateAuthTokens(user);
   console.log('User returned from login:', user);
-  res.status(httpStatus.OK).send({ success: true, user, tokens });
+  res.status(200).send({ success: true, user, tokens });
 });
 
 const logout = catchAsync(async (req, res) => {
   const { message } = await authService.logout(req);
-  res.status(httpStatus.OK).send({ success: true, message });
+  res.status(201).send({ success: true, message });
 });
 
 // const refreshTokens = catchAsync(async (req, res) => {
@@ -39,7 +39,7 @@ const forgotPassword = catchAsync(async (req, res) => {
   let user = await admin.findOne({ email });
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body);
   await emailService.sendResetPasswordEmail(email, resetPasswordToken);
-  return res.status(httpStatus.OK).send({
+  return res.status(200).send({
     success: true,
     message: responseMessage.OTP_SENT_MESSAGE,  
     token: resetPasswordToken,
@@ -63,7 +63,7 @@ const resetPassword = catchAsync(async (req, res) => {
 
 const sendVerificationEmail = catchAsync(async (req, res) => {
   await emailService.sendVerificationEmail(req.body.email);
-  return res.status(httpStatus.OK).send({
+  return res.status(200).send({
     success: true,
     message: responseMessage.OTP_SENT_MESSAGE,
   });
@@ -71,7 +71,7 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
 
 const verifyEmail = catchAsync(async (req, res) => {
   await authService.verifyEmail(req.query.token);
-  res.status(httpStatus.NO_CONTENT).send();
+  res.status(201).send();
 });
 
 const changePassword = catchAsync(async (req, res) => {
@@ -82,10 +82,10 @@ const changePassword = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ success: true, userData });
 });
 
-const setIsVerified = catchAsync(async (req, res) => {
-  const verified = await authService.isIdVerified(req);
-  res.status(httpStatus.OK).send({ success: true, verified });
-});
+// const setIsVerified = catchAsync(async (req, res) => {
+//   const verified = await authService.isIdVerified(req);
+//   res.status(httpStatus.OK).send({ success: true, verified });
+// });
 
 
 
@@ -100,5 +100,5 @@ module.exports = {
   verifyEmail,
   verifyOtp,
   changePassword,
-  setIsVerified,
+  // setIsVerified,
 };

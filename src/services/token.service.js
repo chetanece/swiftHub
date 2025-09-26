@@ -8,6 +8,7 @@ const ApiError = require("../utils/ApiError");
 const { tokenTypes } = require("../config/tokens");
 const { userType } = require("../constants/constant");
 const User = require("../models/user.model");
+const Admin = require("../models/admin.model");
 
 const generateToken = (
   userId,
@@ -42,7 +43,7 @@ const verifyToken = async (token, type) => {
     const payload = jwt.verify(token, config.jwt.secret);
     console.log("Decoded Token", payload);
 
-    const tokenDoc = await token.findOne({
+    const tokenDoc = await Token.findOne({
       token,
       type,
       user: payload.sub,
@@ -80,13 +81,15 @@ const generateAuthTokens = async (user, userType) => {
 };
 
 const generateResetPasswordToken = async(userBody) => {
-  const user = await checkuserByEmail(userBody.email);
+  const user = await checkUserByEmail(userBody.email);
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'No users found with this email');
   }
   const expires = moment().add(config.jwt.resetPasswordExpirationMinutes,'minutes');
-  const resetPasswordToken = generateToken(user.id,expires,tokenTypes.RESET_PASSWORD);
-  await saveToken(resetPasswordToken,user.id,expires,tokenTypes.RESET_PASSWORD);
+  // Use userType from user, fallback to 'admin' if not present
+  const userType = user.userType || user.roleType || 'admin';
+  const resetPasswordToken = generateToken(user.id, userType, expires, tokenTypes.RESET_PASSWORD);
+  await saveToken(resetPasswordToken, user.id, expires, tokenTypes.RESET_PASSWORD);
   return resetPasswordToken;
 }
 
@@ -96,8 +99,11 @@ const generateVerifyEmailToken = async(user) => {
     await saveToken(verifyEmailToken,user.id, expires,tokenTypes.VERIFY_EMAIL);
 }
 const checkUserByEmail = async (email) => {
-  const user = await User.findOne({ email }); 
-  if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'No user found with this email'); 
+  let user = await User.findOne({ email });
+  if (!user) {
+    user = await Admin.findOne({ email });
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'No user found with this email');
+  }
   return user;
 };
 

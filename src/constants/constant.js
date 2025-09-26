@@ -12,7 +12,8 @@ const responseMessage = {
   PASSWORDS_MUST_MATCH: "Both password should be same",
 };
 
-const userType = {
+const userTypes = {
   USER: "user",
+  ADMIN: "admin"
 };
-module.exports = { responseMessage, userType };
+module.exports = { responseMessage, userTypes };

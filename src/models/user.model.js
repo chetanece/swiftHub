@@ -44,10 +44,6 @@ userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   return !!user;
 };
 
-userSchema.statics.isPhoneNumberTaken = async function (phoneNumber, excludeUserId) {
-  const user = await this.findOne({ phoneNumber, _id: { $ne: excludeUserId } });
-  return !!user;
-};
 
 userSchema.methods.isPasswordMatch = async function (password) {
   return bcrypt.compare(password, this.password);
