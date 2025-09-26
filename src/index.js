@@ -9,15 +9,15 @@ let server; // HTTP server reference for graceful shutdown
 mongoose
   .connect(config.mongoose.url, config.mongoose.options)
   .then(() => {
-    logger.info('Connected to MongoDB');
+    logger.info('✅ Connected to MongoDB');
 
     const port = config.port || 4000;
     server = app.listen(port, () => {
-      logger.info(`Server is running on port ${port} (${config.env})`);
+      logger.info(`🚀 Server is running on port ${port} (${config.env})`);
     });
   })
   .catch((err) => {
-    logger.error(`MongoDB connection error: ${err.message}`);
+    logger.error(`❌ MongoDB connection error: ${err.message}`);
     process.exit(1);
   });
 
@@ -25,7 +25,7 @@ mongoose
 const exitHandler = () => {
   if (server) {
     server.close(() => {
-      logger.info('Server closed');
+      logger.info('🛑 Server closed');
       process.exit(1);
     });
   } else {
@@ -44,7 +44,7 @@ process.on('unhandledRejection', unexpectedErrorHandler);
 
 // Handle SIGTERM (Kubernetes/PM2/Heroku shutdown signals)
 process.on('SIGTERM', () => {
-  logger.info('SIGTERM received');
+  logger.info('⚠️ SIGTERM received, shutting down gracefully...');
   if (server) {
     server.close();
   }
