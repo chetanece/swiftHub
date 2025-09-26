@@ -5,21 +5,23 @@ const logger = require('./config/logger');
 
 let server; // HTTP server reference for graceful shutdown
 
-// Connect to MongoDB and then start server
-mongoose
-  .connect(config.mongoose.url, config.mongoose.options)
-  .then(() => {
+const startServer = async () => {
+  try {
+    await mongoose.connect(config.mongoose.url, config.mongoose.options);
     logger.info('✅ Connected to MongoDB');
 
     const port = config.port || 4000;
     server = app.listen(port, () => {
       logger.info(`🚀 Server is running on port ${port} (${config.env})`);
     });
-  })
-  .catch((err) => {
+  } catch (err) {
     logger.error(`❌ MongoDB connection error: ${err.message}`);
     process.exit(1);
-  });
+  }
+};
+
+// Start server
+startServer();
 
 // Graceful shutdown handler
 const exitHandler = () => {
