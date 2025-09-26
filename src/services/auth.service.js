@@ -19,10 +19,7 @@ const register = async (userBody) => {
   if (emailTakenInUser) {
     throw new ApiError(httpStatus.BAD_REQUEST, `Email already registered as another user`);
   }
-  // const phoneTakenInUser = await admin.isPhoneNumberTaken(phoneNumber);
-  // if (phoneTakenInUser) {
-  //   throw new ApiError(httpStatus.BAD_REQUEST, 'Phone number already taken');
-  // }
+
   const userData = {
     ...userBody,
     fcmToken,
@@ -90,7 +87,6 @@ const logout = async (req) => {
   if (!refreshTokenDoc) {
     throw new ApiError(httpStatus.NOT_FOUND, responseMessage.NOT_FOUND);
   }
-  // Find the user by the ID stored in the refresh token
   const userId = refreshTokenDoc.user;
   await Token.deleteOne({ _id: refreshTokenDoc._id });
   await admin.findOneAndUpdate({ _id: userId }, { $set: { fcmToken: null } });
@@ -126,7 +122,11 @@ const resetPassword = async (resetPasswordToken, userBody) => {
     if (!user) {
       throw new Error(responseMessage.USER_NOT_FOUND);
     }
-    await updateUserById(user.id, userType, { password });
+
+    // ---------------- HASH PASSWORD ----------------
+    user.password = password;
+    await user.save(); // pre-save hook in model will hash
+
     await Token.deleteMany({
       user: user.id,
       type: tokenTypes.RESET_PASSWORD,
@@ -169,8 +169,12 @@ const changePassword = async (req) => {
     if (newPassword !== confirmPassword) {
       throw new ApiError(httpStatus.BAD_REQUEST, responseMessage.PASSWORD_NOT_MATCH);
     }
-    const updatedUser = await updateUserById(userId, userType, { password: newPassword });
-    return updatedUser;
+
+    // ---------------- HASH PASSWORD ----------------
+    user.password = newPassword;
+    await user.save(); // pre-save hook in model will hash
+
+    return user;
   } catch (err) {
     throw new ApiError(httpStatus.BAD_REQUEST, err.message);
   }
@@ -191,79 +195,16 @@ const checkUserById = async (userId, role) => {
   return userData;
 };
 
-const updateUserById = async (userId, role, password) => {
-  let userData;
-  switch (role) {
-    case userTypes.USER:
-      userData = await userService.updateUserById(userId, password);
-      break;
-    case userTypes.ADMIN:
-      userData = await admin.findByIdAndUpdate(userId, password, { new: true });
-      break;
-    default:
-      throw new Error('Invalid user type');
-  }
-  return userData;
-};
-
-// const isIdVerified = async (req) => {
-//   const { userId } = req.query;
-
-//   if (!userId) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, 'UserId is required');
-//   }
-
-//   const user = await User.findById(userId);
-
-//   if (!user) {
-//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-//   }
-
-//   // if (user.isProfileVerified === req.body.isProfileVerified) {
-//   //   throw new ApiError(httpStatus.BAD_REQUEST, 'User is already verified');
-//   // }
-
-//   const verified = await User.findByIdAndUpdate({ isProfileVerified: req.body.isProfileVerified }, { new: true });
-
-//   return verified;
-// };
-// const isIdVerified = async (req) => {
-//   const { userId } = req.query;
-
-//   if (!userId) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, 'UserId is required');
-//   }
-
-//   const user = await User.findById(userId);
-
-//   if (!user) {
-//     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-//   }
-
-//   // Optional check if the same value is already set
-//   if (user.isProfileVerified === req.body.isProfileVerified) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, 'User is already Verified');
-//   }
-
-//   const verified = await User.findByIdAndUpdate(
-//     userId, // <-- ID
-//     { isProfileVerified: req.body.isProfileVerified }, // <-- update
-//     { new: true } // <-- options
-//   );
-
-//   return verified;
-// };
-
+// ---------------- REMOVE OLD updateUserById ----------------
+// No longer using findByIdAndUpdate, handled via .save() in reset/change password
 
 module.exports = {
   register,
   login,
   logout,
-  // refreshAuth,
   resetPassword,
   verifyEmail,
   changePassword,
   // getUserByPhoneNumber,
   // getUsersById,
-
 };

@@ -57,10 +57,10 @@ adminSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   return !!user;
 };
 
-adminSchema.statics.isPhoneNumberTaken = async function (phoneNumber, excludeUserId) {
-  const user = await this.findOne({ phoneNumber, _id: { $ne: excludeUserId } });
-  return !!user;
-};
+// adminSchema.statics.isPhoneNumberTaken = async function (phoneNumber, excludeUserId) {
+//   const user = await this.findOne({ phoneNumber, _id: { $ne: excludeUserId } });
+//   return !!user;
+// };
 
 adminSchema.methods.isPasswordMatch = async function (password) {
   return bcrypt.compare(password, this.password);
